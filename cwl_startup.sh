@@ -110,22 +110,33 @@ echo "$(date)"
 echo "Installing Docker and CWL runner ${RUNNER}"
 
 if [[ ${RUNNER} == "cwltool" ]]; then
+  # update system
   sudo apt-get update
-  sudo apt-get --yes install apt-utils docker.io gcc python-dev python-setuptools ca-certificates
-  sudo easy_install -U virtualenv
-  sudo systemctl start docker.service
+  sudo apt-get install -y software-properties-common
 
-  echo "$(date)"
-  echo "Starting virtualenv"
-  virtualenv cwl
+  ## install docker
+  curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+  sudo apt-get update
+  apt-cache policy docker-ce
+  sudo apt-get install -y docker-ce
+  sudo systemctl start docker
+
+  # install cwl
+  sudo apt-get install -y python3-pip
+  sudo apt-get install -y python3-venv
+  python3 -m venv cwl
   source cwl/bin/activate
-  pip install cwlref-runner
+  pip3 install wheel
+  #pip3 install cwlref-runner
+  pip3 install cwltool
 
   echo "$(date)"
   echo "Running the CWL workflow"
   export HOME="/root"  # cwl runner needs it; startup scripts don't have it defined
   cd "${INPUT_FOLDER}"
-  CMD="cwl-runner --outdir ${OUTPUT_FOLDER} --tmpdir-prefix ${TMP_FOLDER} --tmp-outdir-prefix ${TMP_FOLDER} ${WORKFLOW_LOCAL} ${SETTINGS_LOCAL}"
+  #CMD="cwl-runner --outdir ${OUTPUT_FOLDER} --tmpdir-prefix ${TMP_FOLDER} --tmp-outdir-prefix ${TMP_FOLDER} ${WORKFLOW_LOCAL} ${SETTINGS_LOCAL}"
+  CMD="cwltool --outdir ${OUTPUT_FOLDER} --tmpdir-prefix ${TMP_FOLDER} --tmp-outdir-prefix ${TMP_FOLDER} ${WORKFLOW_LOCAL} ${SETTINGS_LOCAL}"
   echo "${CMD}"
   ${CMD} && STATUS="COMPLETED" || STATUS="FAILED"
 
