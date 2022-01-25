@@ -131,6 +131,10 @@ if [[ ${RUNNER} == "cwltool" ]]; then
   #pip3 install cwlref-runner
   pip3 install cwltool
 
+
+  # authorize docker registry access
+  gcloud auth configure-docker --quiet us-central1-docker.pkg.dev
+
   echo "$(date)"
   echo "Running the CWL workflow"
   export HOME="/root"  # cwl runner needs it; startup scripts don't have it defined
